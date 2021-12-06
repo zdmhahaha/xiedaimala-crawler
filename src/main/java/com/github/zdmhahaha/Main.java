@@ -9,7 +9,6 @@ import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public class Main {
                 break;
             }
             //每拿到一个链接就从池子中删除掉
-            String link = linkPool.remove(linkPool.size()-1);
+            String link = linkPool.remove(linkPool.size() - 1);
 
             //是否已经处理过
             if (processedLinks.contains(link)) {
@@ -68,11 +67,11 @@ public class Main {
     private static Document getHttpGetAndParseHtml(String link) throws IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         //System.out.println(link);
-        if(link.startsWith("//")) {
+        if (link.startsWith("//")) {
             link = "https:" + link;
         }
         HttpGet httpGet = new HttpGet(link);
-        httpGet.addHeader("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36");
+        httpGet.addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36");
         try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
             System.out.println(response1.getStatusLine());
             HttpEntity entity1 = response1.getEntity();
