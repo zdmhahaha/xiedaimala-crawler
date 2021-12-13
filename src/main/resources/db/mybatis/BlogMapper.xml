@@ -10,7 +10,7 @@
         DELETE FROM LINKS_TO_BE_PROCESSED where link = #{link}
     </delete>
     <insert id="insertnews" parameterType="com.github.zdmhahaha.News">
-        insert into news (url,title,content,created_at,modified_at) values (#{url},#{title},#{content},now(),now())
+        insert into news (title,content,url,created_at,modified_at) values (#{title},#{content},#{url},now(),now())
     </insert>
     <select id="countLink" parameterType="String" resultType="int">
         select count(link) from LINKS_TO_BE_PROCESSED where link = #{link}
@@ -27,4 +27,7 @@
         </choose>
         values (#{link})
     </insert>
+    <select id="selectAllLink" resultType="com.github.zdmhahaha.News">
+        select id, url, title, content from NEWS limit 1000
+    </select>
 </mapper>

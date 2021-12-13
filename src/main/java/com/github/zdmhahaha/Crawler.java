@@ -16,40 +16,42 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Crawler {
+public class Crawler extends Thread {
 
-    CrawlerDao dao = new MyBatisCrawlerDao();
-
-    public static void main(String[] args) throws SQLException, IOException {
-        new Crawler().run();
+    private CrawlerDao dao;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public Crawler(CrawlerDao dao) {
+        this.dao = dao;
     }
 
     @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
-    public void run() throws IOException, SQLException {
+    public void run() {
+        try {
+            String link;
+            //从数据库加载下一个即将处理的链接，能加载到则进入循环
+            while ((link = dao.getNextLinkThenDeleteIt()) != null) {
 
-        String link;
-        //从数据库加载下一个即将处理的链接，能加载到则进入循环
-        while ((link = dao.getNextLinkThenDeleteIt()) != null) {
+                //是否已经处理过
+                if (dao.isLinkProcessed(link)) {
+                    continue;
+                }
+                //第一轮筛选： 是否包含sina.cn
+                if (isInterestingLink(link)) {
+                    //爬它
+                    Document doc = getHttpGetAndParseHtml(link);
+                    //过滤所有的a标签 每一个都加入数据库中待处理的链接表中
+                    parseUrlsFromPagesAndInToDatabase(doc);
+                    //过滤出新闻相关的内容，存入数据库
+                    storeIntoDatabaseIfItIsNewsPage(doc, link);
 
-            //是否已经处理过
-            if (dao.isLinkProcessed(link)) {
-                continue;
+                    //处理完的链接加入已处理的链接池
+                    dao.insertLinkAlreadyProcessed(link);
+                    //processedLinks.add(link);
+                }
             }
-            //第一轮筛选： 是否包含sina.cn
-            if (isInterestingLink(link)) {
-                //爬它
-                Document doc = getHttpGetAndParseHtml(link);
-                //过滤所有的a标签 每一个都加入数据库中待处理的链接表中
-                parseUrlsFromPagesAndInToDatabase(doc);
-                //过滤出新闻相关的内容，存入数据库
-                storeIntoDatabaseIfItIsNewsPage(doc, link);
-
-                //处理完的链接加入已处理的链接池
-                dao.insertLinkAlreadyProcessed(link);
-                //processedLinks.add(link);
-            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
     }
 
     private void parseUrlsFromPagesAndInToDatabase(Document doc) throws SQLException {
